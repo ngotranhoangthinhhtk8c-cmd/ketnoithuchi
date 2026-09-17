@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Nhập Thu Chi</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px 12px 40px;
+      background: #f3f4f6;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+      color: #1f2937;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+      margin: auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    .header p {
+      margin: 7px 0 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 15px;
+      box-shadow:
+        0 3px 15px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-title {
+      font-size: 19px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .date-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 7px;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 11px;
+      padding: 12px 13px;
+      font-size: 16px;
+      outline: none;
+      background: white;
+    }
+
+    input:focus {
+      border-color: #6366f1;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 125px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .category {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .amount-area {
+      position: relative;
+    }
+
+    .amount {
+      padding-right: 58px;
+    }
+
+    .currency {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      font-size: 13px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .note {
+      grid-column: 2;
+      margin-top: -5px;
+    }
+
+    .note input {
+      font-size: 14px;
+    }
+
+    .save-button {
+      width: 100%;
+      border: none;
+      border-radius: 13px;
+      padding: 14px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #111827;
+      color: white;
+    }
+
+    .save-button:active {
+      transform: scale(0.99);
+    }
+
+    .save-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .message {
+      display: none;
+      text-align: center;
+      padding: 13px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .message.success {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .message.error {
+      display: block;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    @media (max-width: 480px) {
+
+      body {
+        padding: 14px 10px 30px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+
+      .row {
+        grid-template-columns: 105px 1fr;
+        gap: 8px;
+      }
+
+      .category {
+        font-size: 13px;
+      }
+
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+
+    <h1>💰 Nhập Thu Chi</h1>
+
+    <p>
+      Nhật ký thu chi cá nhân
+    </p>
+
+  </div>
+
+
+  <div id="message" class="message"></div>
+
+
+  <!-- =====================================================
+       THỜI GIAN
+       ===================================================== -->
+
+  <div class="card">
+
+    <div class="card-title">
+      📅 Thời gian
+    </div>
+
+    <label class="date-label">
+      Ngày giao dịch
+    </label>
+
+    <input
+      type="date"
+      id="thoiGian"
+    >
+
+  </div>
+
+
+  <!-- =====================================================
+       THU NHẬP
+       ===================================================== -->
+
+  <div class="card">
+
+    <div class="card-title">
+      💰 Thu nhập
+    </div>
+
+
+    <!-- Ba mẹ -->
+
+    <div class="row">
+
+      <div class="category">
+        Ba mẹ cho
+      </div>
+
+      <div class="amount-area">
+
+        <input
+          class="amount"
+          id="tienBaMeCho"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+        >
+
+        <span class="currency">
+          VNĐ
+        </span>
+
+      </div>
+
+      <div class="note">
+
+        <input
+          id="ghiChuBaMe"
+          type="text"
+          placeholder="Ghi chú ba mẹ..."
+        >
+
+      </div>
+
+    </div>
+
+
+    <!-- Kiếm thêm -->
+
+    <div class="row">
+
+      <div class="category">
+        Kiếm thêm
+      </div>
+
+      <div class="amount-area">
+
+        <input
+          class="amount"
+          id="kiemThem"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+        >
+
+        <span class="currency">
+          VNĐ
+        </span>
+
+      </div>
+
+      <div class="note">
+
+        <input
+          id="ghiChuKiemThem"
+          type="text"
+          placeholder="Ghi chú kiếm thêm..."
+        >
+
+      </div>
+
+    </div>
+
+
+    <!-- Thu khác -->
+
+    <div class="row">
+
+      <div class="category">
+        Khác
+      </div>
+
+      <div class="amount-area">
+
+        <input
+          class="amount"
+          id="thuKhac"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+        >
+
+        <span class="currency">
+          VNĐ
+        </span>
+
+      </div>
+
+      <div class="note">
+
+        <input
+          id="ghiChuKhac"
+          type="text"
+          placeholder="Ghi chú khác..."
+        >
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       CHI TIÊU
+       ===================================================== -->
+
+  <div class="card">
+
+    <div class="card-title">
+      💸 Chi tiêu
+    </div>
+
+
+    <!-- Sinh hoạt -->
+
+    <div class="row">
+
+      <div class="category">
+        Chi sinh hoạt
+      </div>
+
+      <div class="amount-area">
+
+        <input
+          class="amount"
+          id="chiSinhHoat"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+        >
+
+        <span class="currency">
+          VNĐ
+        </span>
+
+      </div>
+
+      <div class="note">
+
+        <input
+          id="ghiChuSinhHoat"
+          type="text"
+          placeholder="Ghi chú sinh hoạt..."
+        >
+
+      </div>
+
+    </div>
+
+
+    <!-- Ăn uống -->
+
+    <div class="row">
+
+      <div class="category">
+        Chi ăn uống
+      </div>
+
+      <div class="amount-area">
+
+        <input
+          class="amount"
+          id="chiAnUong"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+        >
+
+        <span class="currency">
+          VNĐ
+        </span>
+
+      </div>
+
+      <div class="note">
+
+        <input
+          id="ghiChuAnUong"
+          type="text"
+          placeholder="Ghi chú ăn uống..."
+        >
+
+      </div>
+
+    </div>
+
+
+    <!-- Học tập -->
+
+    <div class="row">
+
+      <div class="category">
+        Chi học tập
+      </div>
+
+      <div class="amount-area">
+
+        <input
+          class="amount"
+          id="chiHocTap"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+        >
+
+        <span class="currency">
+          VNĐ
+        </span>
+
+      </div>
+
+      <div class="note">
+
+        <input
+          id="ghiChuHocTap"
+          type="text"
+          placeholder="Ghi chú học tập..."
+        >
+
+      </div>
+
+    </div>
+
+
+    <!-- Đi lại -->
+
+    <div class="row">
+
+      <div class="category">
+        Chi đi lại
+      </div>
+
+      <div class="amount-area">
+
+        <input
+          class="amount"
+          id="chiDiLai"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+        >
+
+        <span class="currency">
+          VNĐ
+        </span>
+
+      </div>
+
+      <div class="note">
+
+        <input
+          id="ghiChuDiLai"
+          type="text"
+          placeholder="Ghi chú đi lại..."
+        >
+
+      </div>
+
+    </div>
+
+
+    <!-- Giải trí -->
+
+    <div class="row">
+
+      <div class="category">
+        Chi giải trí
+      </div>
+
+      <div class="amount-area">
+
+        <input
+          class="amount"
+          id="chiGiaiTri"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+        >
+
+        <span class="currency">
+          VNĐ
+        </span>
+
+      </div>
+
+      <div class="note">
+
+        <input
+          id="ghiChuGiaiTri"
+          type="text"
+          placeholder="Ghi chú giải trí..."
+        >
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       NÚT LƯU
+       ===================================================== -->
+
+  <button
+    id="saveButton"
+    class="save-button"
+    onclick="saveData()"
+  >
+    💾 Lưu giao dịch
+  </button>
+
+
+</div>
+
+
+<script>
+
+  /*
+   * =======================================================
+   * GOOGLE APPS SCRIPT API
+   * =======================================================
+   */
+
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbxlQFpmTZdb-Gbkn1t7M3r_o-jFkN4Z1tQta6BqfKOsXkshrpqp4MCw_UeKcH14w3Di/exec";
+
+
+  /*
+   * =======================================================
+   * NGÀY MẶC ĐỊNH = HÔM NAY
+   * =======================================================
+   */
+
+  function setToday() {
+
+    const now = new Date();
+
+    const year =
+      now.getFullYear();
+
+    const month =
+      String(now.getMonth() + 1)
+        .padStart(2, "0");
+
+    const day =
+      String(now.getDate())
+        .padStart(2, "0");
+
+    document
+      .getElementById("thoiGian")
+      .value =
+      `${year}-${month}-${day}`;
+
+  }
+
+
+  setToday();
+
+
+  /*
+   * =======================================================
+   * ĐỊNH DẠNG TIỀN
+   * =======================================================
+   */
+
+  document
+    .querySelectorAll(".amount")
+    .forEach(function(input) {
+
+      input.addEventListener(
+        "input",
+        function() {
+
+          let value =
+            this.value.replace(/\D/g, "");
+
+          if (value === "") {
+
+            this.value = "";
+
+            return;
+
+          }
+
+          this.value =
+            Number(value)
+              .toLocaleString("vi-VN")
+              .replace(/\./g, " ");
+
+        }
+      );
+
+    });
+
+
+  /*
+   * =======================================================
+   * LẤY GIÁ TRỊ TIỀN GỐC
+   * =======================================================
+   */
+
+  function rawMoney(id) {
+
+    const element =
+      document.getElementById(id);
+
+    return element.value
+      .replace(/\D/g, "");
+
+  }
+
+
+  /*
+   * =======================================================
+   * HIỂN THỊ THÔNG BÁO
+   * =======================================================
+   */
+
+  function showMessage(
+    text,
+    type
+  ) {
+
+    const message =
+      document.getElementById(
+        "message"
+      );
+
+    message.textContent = text;
+
+    message.className =
+      "message " + type;
+
+  }
+
+
+  /*
+   * =======================================================
+   * LƯU DỮ LIỆU
+   * =======================================================
+   */
+
+  async function saveData() {
+
+    const button =
+      document.getElementById(
+        "saveButton"
+      );
+
+
+    const date =
+      document.getElementById(
+        "thoiGian"
+      ).value;
+
+
+    /*
+     * Kiểm tra ngày
+     */
+
+    if (!date) {
+
+      showMessage(
+        "⚠️ Vui lòng chọn ngày giao dịch.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    /*
+     * Tạo dữ liệu
+     */
+
+    const data = {
+
+      thoiGian: formatDateForAPI(date),
+
+      tienBaMeCho:
+        rawMoney("tienBaMeCho"),
+
+      ghiChuBaMe:
+        document.getElementById(
+          "ghiChuBaMe"
+        ).value.trim(),
+
+
+      kiemThem:
+        rawMoney("kiemThem"),
+
+      ghiChuKiemThem:
+        document.getElementById(
+          "ghiChuKiemThem"
+        ).value.trim(),
+
+
+      thuKhac:
+        rawMoney("thuKhac"),
+
+      ghiChuKhac:
+        document.getElementById(
+          "ghiChuKhac"
+        ).value.trim(),
+
+
+      chiSinhHoat:
+        rawMoney("chiSinhHoat"),
+
+      ghiChuSinhHoat:
+        document.getElementById(
+          "ghiChuSinhHoat"
+        ).value.trim(),
+
+
+      chiAnUong:
+        rawMoney("chiAnUong"),
+
+      ghiChuAnUong:
+        document.getElementById(
+          "ghiChuAnUong"
+        ).value.trim(),
+
+
+      chiHocTap:
+        rawMoney("chiHocTap"),
+
+      ghiChuHocTap:
+        document.getElementById(
+          "ghiChuHocTap"
+        ).value.trim(),
+
+
+      chiDiLai:
+        rawMoney("chiDiLai"),
+
+      ghiChuDiLai:
+        document.getElementById(
+          "ghiChuDiLai"
+        ).value.trim(),
+
+
+      chiGiaiTri:
+        rawMoney("chiGiaiTri"),
+
+      ghiChuGiaiTri:
+        document.getElementById(
+          "ghiChuGiaiTri"
+        ).value.trim()
+
+    };
+
+
+    /*
+     * Khóa nút trong lúc gửi
+     */
+
+    button.disabled = true;
+
+    button.textContent =
+      "⏳ Đang lưu...";
+
+
+    /*
+     * Dùng FormData
+     */
+
+    const formData =
+      new URLSearchParams();
+
+
+    Object.keys(data)
+      .forEach(function(key) {
+
+        formData.append(
+          key,
+          data[key]
+        );
+
+      });
+
+
+    try {
+
+      /*
+       * Gửi đến Apps Script
+       */
+
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+          mode: "no-cors",
+          body: formData
+        }
+      );
+
+
+      /*
+       * Vì no-cors không cho trình duyệt
+       * đọc phản hồi từ Apps Script,
+       * ta xem request hoàn thành là đã gửi.
+       */
+
+      showMessage(
+        "✅ Đã gửi giao dịch.",
+        "success"
+      );
+
+
+      /*
+       * Xóa các ô tiền và ghi chú
+       */
+
+      clearForm();
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      showMessage(
+        "❌ Không thể gửi dữ liệu.",
+        "error"
+      );
+
+    }
+
+
+    button.disabled = false;
+
+    button.textContent =
+      "💾 Lưu giao dịch";
+
+  }
+
+
+  /*
+   * =======================================================
+   * CHUYỂN yyyy-MM-dd → dd/MM/yyyy
+   * =======================================================
+   */
+
+  function formatDateForAPI(value) {
+
+    const parts =
+      value.split("-");
+
+    return (
+      parts[2] +
+      "/" +
+      parts[1] +
+      "/" +
+      parts[0]
+    );
+
+  }
+
+
+  /*
+   * =======================================================
+   * XÓA FORM SAU KHI LƯU
+   * =======================================================
+   */
+
+  function clearForm() {
+
+    document
+      .querySelectorAll(".amount")
+      .forEach(function(input) {
+
+        input.value = "";
+
+      });
+
+
+    document
+      .querySelectorAll(".note input")
+      .forEach(function(input) {
+
+        input.value = "";
+
+      });
+
+  }
+
+</script>
+
+</body>
+</html>
