@@ -56,37 +56,27 @@ button { border: 0; cursor: pointer; }
   border-radius: 15px; background: #20252d; color: #fff;
   font-size: 16px; font-weight: 700;
   transition: transform .18s ease, opacity .18s ease;
-  will-change: transform, background-color, color, border-radius;
+  will-change: left, top, width, height, background-color, color, border-radius, opacity;
 }
 .open-modal-btn:hover { transform: translateY(-1px); opacity: .92; }
+
+/* Tùy chỉnh hiệu ứng biến hình của nút */
 .open-modal-btn.morphing {
-  position: relative;
+  position: fixed;
   z-index: 1001;
+  margin: 0;
   pointer-events: none;
-  animation: openerMorph 1.65s cubic-bezier(.22,.8,.25,1) forwards;
-}
-@keyframes openerMorph {
-  0% {
-    background: #20252d;
-    color: #fff;
-    border-radius: 15px;
-    box-shadow: none;
-    opacity: 1;
-  }
-  55% {
-    background: #fff;
-    color: #fff;
-    border-radius: 22px;
-    box-shadow: 0 14px 45px rgba(15,23,42,.12);
-    opacity: 1;
-  }
-  100% {
-    background: #fff;
-    color: #fff;
-    border-radius: 24px;
-    box-shadow: 0 25px 80px rgba(15,23,42,.22);
-    opacity: 0;
-  }
+  transform: none !important;
+  box-shadow: none !important;
+  transition:
+    left 3s cubic-bezier(.45,.05,.55,.95),
+    top 3s cubic-bezier(.45,.05,.55,.95),
+    width 3s cubic-bezier(.45,.05,.55,.95),
+    height 3s cubic-bezier(.45,.05,.55,.95),
+    border-radius 3s cubic-bezier(.45,.05,.55,.95),
+    background-color 1.8s cubic-bezier(.45,.05,.55,.95), /* Chuyển màu trắng sáng sớm ở 1.8s */
+    color 0.8s ease,                                       /* Chữ ẩn đi nhanh ở 0.8s */
+    opacity 0.6s cubic-bezier(.45,.05,.55,.95) 2.4s;     /* Nút bắt đầu mờ đi từ 2.4s -> 3.0s */
 }
 
 .modal-overlay {
@@ -97,7 +87,7 @@ button { border: 0; cursor: pointer; }
 }
 .modal-overlay.show { display: flex; }
 .modal-overlay.show.opening {
-  animation: overlayMorph 1.65s cubic-bezier(.22,.8,.25,1) forwards;
+  animation: overlayMorph 3s cubic-bezier(.45,.05,.55,.95) forwards;
 }
 @keyframes overlayMorph {
   from {
@@ -118,41 +108,36 @@ button { border: 0; cursor: pointer; }
   display: flex; flex-direction: column; overflow: hidden;
   background: #fff; border-radius: 24px;
   box-shadow: 0 25px 80px rgba(15,23,42,.22);
-  transform-origin: center center;
-  will-change: transform, border-radius, box-shadow;
+  will-change: box-shadow, opacity;
 }
+
+/* Ẩn bảng điền lúc mới bấm và chỉ hiện mượt ở giây 2.4s - 3.0s */
 .modal-overlay.show.opening .transaction-modal {
-  animation: modalMorph 1.65s cubic-bezier(.22,.8,.25,1) forwards;
+  box-shadow: none;
+  opacity: 0;
+  animation: modalHandOff 0.6s cubic-bezier(.45,.05,.55,.95) 2.4s forwards;
 }
-@keyframes modalMorph {
-  0% {
-    opacity: 1;
-    transform: translate3d(var(--morph-x, 0px), var(--morph-y, 0px), 0)
-               scale(var(--morph-scale-x, 1), var(--morph-scale-y, 1));
-    border-radius: 15px;
-    box-shadow: 0 10px 28px rgba(15,23,42,.08);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1, 1);
-    border-radius: 24px;
-    box-shadow: 0 25px 80px rgba(15,23,42,.22);
-  }
+
+@keyframes modalHandOff {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .reveal-item {
   opacity: 1;
   transform: translateY(0);
 }
-.modal-overlay.show.opening .reveal-item {
-  animation: contentReveal .62s cubic-bezier(.22,.8,.25,1) both;
-  animation-delay: calc(1.68s + (var(--reveal-index, 0) * 62ms));
+
+/* Nội dung bên trong xuất hiện từ giây 2.2s để khớp hoàn hảo khi bảng hiện xong */
+.modal-overlay.show.revealing .reveal-item {
+  animation: contentReveal 0.8s cubic-bezier(.45,.05,.55,.95) both;
+  animation-delay: calc(2.2s + (var(--reveal-index, 0) * 250ms));
 }
 @keyframes contentReveal {
   0% { opacity: 0; transform: translateY(14px); filter: brightness(.86); }
-  65% { opacity: .92; transform: translateY(2px); filter: brightness(.96); }
   100% { opacity: 1; transform: translateY(0); filter: brightness(1); }
 }
+
 .modal-header {
   flex-shrink: 0; display:flex; align-items:center; justify-content:space-between;
   gap:15px; padding:20px 22px; border-bottom:1px solid #edf0f3;
@@ -210,7 +195,6 @@ button { border: 0; cursor: pointer; }
   grid-template-columns:145px minmax(130px,.75fr) minmax(180px,1fr) 40px;
   gap:9px; align-items:center;
 }
-.amount-input { text-align:right; }
 .note-input::placeholder { color:#a0a8b2; }
 .remove-row-btn {
   width:40px; height:40px; border-radius:11px;
@@ -459,41 +443,116 @@ function prepareModalReveal() {
   });
 }
 
-function openModal() {
-  const buttonRect = openBtn.getBoundingClientRect();
+let openingTimer = null;
+let revealResetFrame = null;
+let morphFrame = null;
+let animationRunId = 0;
 
-  modal.classList.add("show", "opening");
+function clearAnimationWork() {
+  animationRunId++;
+
+  if (openingTimer) {
+    clearTimeout(openingTimer);
+    openingTimer = null;
+  }
+
+  if (revealResetFrame) {
+    cancelAnimationFrame(revealResetFrame);
+    revealResetFrame = null;
+  }
+
+  if (morphFrame) {
+    cancelAnimationFrame(morphFrame);
+    morphFrame = null;
+  }
+}
+
+function resetButtonMorphStyles() {
+  [
+    "position", "left", "top", "width", "height", "margin",
+    "transition", "opacity", "transform", "border-radius",
+    "background-color", "color"
+  ].forEach(prop => openBtn.style.removeProperty(prop));
+}
+
+function restartRevealAnimations() {
+  const revealItems = modal.querySelectorAll(".reveal-item");
+  revealItems.forEach(item => {
+    item.style.animation = "none";
+  });
+
+  void modal.offsetWidth;
+
+  revealItems.forEach(item => {
+    item.style.animation = "";
+  });
+}
+
+function openModal() {
+  clearAnimationWork();
+  const runId = animationRunId;
+
+  const buttonRect = openBtn.getBoundingClientRect();
+  const modalPanel = modal.querySelector(".transaction-modal");
+
+  modal.classList.remove("show", "opening", "revealing");
+  openBtn.classList.remove("morphing");
+  resetButtonMorphStyles();
+  void modal.offsetWidth;
+  void openBtn.offsetWidth;
+
+  modal.classList.add("show", "opening", "revealing");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
 
-  const modalPanel = modal.querySelector(".transaction-modal");
   const panelRect = modalPanel.getBoundingClientRect();
 
-  const buttonCenterX = buttonRect.left + buttonRect.width / 2;
-  const buttonCenterY = buttonRect.top + buttonRect.height / 2;
-  const panelCenterX = panelRect.left + panelRect.width / 2;
-  const panelCenterY = panelRect.top + panelRect.height / 2;
-
-  modalPanel.style.setProperty("--morph-x", `${buttonCenterX - panelCenterX}px`);
-  modalPanel.style.setProperty("--morph-y", `${buttonCenterY - panelCenterY}px`);
-  modalPanel.style.setProperty("--morph-scale-x", buttonRect.width / panelRect.width);
-  modalPanel.style.setProperty("--morph-scale-y", buttonRect.height / panelRect.height);
+  openBtn.style.position = "fixed";
+  openBtn.style.left = `${buttonRect.left}px`;
+  openBtn.style.top = `${buttonRect.top}px`;
+  openBtn.style.width = `${buttonRect.width}px`;
+  openBtn.style.height = `${buttonRect.height}px`;
+  openBtn.style.margin = "0";
+  openBtn.style.opacity = "1";
 
   prepareModalReveal();
+  restartRevealAnimations();
+
+  void openBtn.offsetWidth;
   openBtn.classList.add("morphing");
 
-  window.setTimeout(() => {
-    openBtn.classList.remove("morphing");
-  }, 1720);
+  morphFrame = requestAnimationFrame(() => {
+    morphFrame = null;
+    if (runId !== animationRunId || !modal.classList.contains("show")) return;
 
-  window.setTimeout(() => {
+    openBtn.style.left = `${panelRect.left}px`;
+    openBtn.style.top = `${panelRect.top}px`;
+    openBtn.style.width = `${panelRect.width}px`;
+    openBtn.style.height = `${panelRect.height}px`;
+    openBtn.style.borderRadius = "24px";
+    openBtn.style.backgroundColor = "#fff";
+    openBtn.style.color = "rgba(255,255,255,0)";
+    openBtn.style.opacity = "0";
+  });
+
+  openingTimer = window.setTimeout(() => {
+    if (runId !== animationRunId || !modal.classList.contains("show")) return;
     modal.classList.remove("opening");
+    openingTimer = null;
   }, 3000);
 }
 
 function closeModal() {
-  modal.classList.remove("show", "opening");
+  clearAnimationWork();
+
+  modal.classList.remove("show", "opening", "revealing");
   openBtn.classList.remove("morphing");
+  resetButtonMorphStyles();
+
+  modal.querySelectorAll(".reveal-item").forEach(item => {
+    item.style.animation = "none";
+  });
+
   modal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
 }
@@ -587,8 +646,6 @@ document.addEventListener("keydown", event => {
   if (event.key === "Escape" && modal.classList.contains("show")) closeModal();
 });
 
-// Đăng ký Service Worker để biến trang thành PWA.
-// Đường dẫn tương đối giúp chạy đúng cả ở GitHub Pages dạng /ten-repo/.
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./service-worker.js")
